@@ -24,33 +24,31 @@ class BooksSpider(scrapy.Spider):
         # Extract the last part of the URL and use it as part of the filename to save the scraped data.
         page = response.url.split("/")[-2]
         
-        # Create the filename to save the scraped data. 
-        filename = f"books-%s.html" % page
+        filename = f"books-{page}.html"
+        bookdetails = {}
+        # Save the content as file
+        # Path(filename).write_bytes(response.body)
+        self.log(f"Saved file {filename}")
 
-        # Create a list to store the scraped data.
-        bookdetails = []
-
-        # Extract the list of books from the response body.
         cards = response.css(".product_pod")
-        for card in cards:
-            title = card.css("h3 a::text").get()
-            price = card.css(".price_color::text").get()
-            instock = card.css(".instock availability::text").get() 
-        
-            print(title)
+        ''' Print all the anchor tag from the website
+        b = a.css("a")
+        print(b) '''
+        for card in cards: 
+            title = card.css("h3>a::text").get()
+            print(title) 
+
+            rating = card.css(".star-rating").attrib["class"].split()[-1]
+            print(rating)
+
+            price = card.css(".product_price>.price_color::text").get()
             print(price)
-            print(instock)
-        
-            # Save the extracted data to the list as a dictionary.
-            bookdetails.append({
-                "title": title,
-                "price": price,
-                "instock": instock
-            })
 
-        # Log a message indicating that the file has been saved
-        self.log('Saved file %s' % filename)
+            image = card.css(".image_container img")
+            print(image.attrib["src"])
 
-        # Save the data into a CSV using a DataFrame and pandas
-        df = pd.DataFrame(bookdetails)
-        df.to_csv("books.csv", index=False)
+            stock = card.css(".availability")
+            if len(stock.css(".icon-ok")) > 0:
+                inStock = True
+            else:
+                inStock = False
